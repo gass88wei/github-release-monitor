@@ -5,6 +5,7 @@ import {
   readdirSync,
   readFileSync,
   rmSync,
+  writeFileSync,
 } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -63,6 +64,44 @@ function copyPackageWithDeps(packageName, destNodeModules, root) {
   }
 }
 
+// Next 16.1+ Turbopack emits external requires as "pkg-<contenthash>"
+// (vercel/next.js#87737); the hashed package never exists in node_modules
+// and standalone servers 500 on any DB route. Rewrite such ids back to the
+// real package name when the unhashed package is present.
+function patchHashedExternals(appDir) {
+  const serverDir = path.join(appDir, ".next", "server");
+  const nodeModulesDir = path.join(appDir, "node_modules");
+  const pattern =
+    /(["'])(@[\w.-]+\/[\w.-]+|[A-Za-z0-9._@-]+?)-([0-9a-f]{16})\1/g;
+  let replacements = 0;
+  for (const entry of readdirSync(serverDir, {
+    recursive: true,
+    withFileTypes: true,
+  })) {
+    if (!entry.isFile() || !entry.name.endsWith(".js")) continue;
+    const filePath = path.join(entry.parentPath ?? entry.path, entry.name);
+    const source = readFileSync(filePath, "utf8");
+    let changed = false;
+    const patched = source.replace(pattern, (match, quote, name) => {
+      if (!existsSync(path.join(nodeModulesDir, name))) return match;
+      changed = true;
+      replacements += 1;
+      return `${quote}${name}${quote}`;
+    });
+    if (changed) {
+      writeFileSync(filePath, patched, "utf8");
+      console.log(
+        `[assemble] patched hashed external in ${path.relative(appDir, filePath)}`,
+      );
+    }
+  }
+  if (replacements > 0) {
+    console.log(
+      `[assemble] rewrote ${replacements} hashed external require(s) (next#87737)`,
+    );
+  }
+}
+
 function main() {
   const args = parseArgs(process.argv.slice(2));
 
@@ -109,6 +148,9 @@ function main() {
       fail("better-sqlite3 copied but no .node binary found");
     }
   }
+
+  console.log("[assemble] patching turbopack hashed externals");
+  patchHashedExternals(appDir);
 
   console.log("[assemble] copying portable launcher files");
   const portableDir = path.join(projectRoot, "scripts", "portable");

@@ -103,6 +103,30 @@ jobs:
             exit 1
           }
           Write-Host "Smoke test passed (HTTP $status)"
+          # DB roundtrip: guards the better-sqlite3 external (next#87737),
+          # where pages render but any DB route 500s.
+          $token = (Get-Content (Join-Path $pkg 'app\data\setup-token.txt') -Raw).Trim()
+          $body = @{
+            token = $token
+            email = 'smoke@example.test'
+            password = 'SmokeTest@2026'
+            name = 'smoke'
+            username = 'smoke'
+          } | ConvertTo-Json
+          try {
+            $setup = Invoke-WebRequest -Uri 'http://127.0.0.1:3000/api/auth/setup' `
+              -Method POST -ContentType 'application/json' -Body $body `
+              -UseBasicParsing -TimeoutSec 30
+            if ($setup.StatusCode -lt 200 -or $setup.StatusCode -ge 300) {
+              throw "HTTP $($setup.StatusCode)"
+            }
+            Write-Host "Smoke setup OK (HTTP $($setup.StatusCode))"
+          } catch {
+            taskkill /F /T /PID $proc.Id 2>$null | Out-Null
+            Write-Host "::error::Smoke test failed - POST /api/auth/setup failed: $_"
+            exit 1
+          }
+          taskkill /F /T /PID $proc.Id 2>$null | Out-Null
 
       - name: Package zip
         shell: pwsh
