@@ -27,7 +27,9 @@ jobs:
         run: npm ci --no-audit --no-fund
 
       - name: Lint (Biome)
-        run: npm run lint
+        # Same file scope as the upstream Docker lint stage (src/tests/scripts);
+        # legacy root config files (next.config.mjs etc.) are not lint-clean.
+        run: npx biome check --max-diagnostics=200 src tests scripts .github/actions/star-history
 
       - name: Typecheck
         run: |

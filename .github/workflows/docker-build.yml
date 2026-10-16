@@ -1,14 +1,9 @@
 name: Build and Push Docker Image
 
 on:
-  # Trigger on push to branches (without version number) and release tags (with version number)
-  push:
-    branches: [ main, develop ]
-    tags: [ 'v*.*.*' ]
-
-  # Trigger on pull requests
-  pull_request:
-    branches: [ main, develop ]
+  # Disabled for this fork: the portable-zip pipeline (release-windows.yml)
+  # and ci.yml cover verification. Trigger manually if a Docker image is needed.
+  workflow_dispatch:
 
 env:
   REGISTRY: ghcr.io

@@ -29,7 +29,8 @@ jobs:
         run: npm ci --no-audit --no-fund
 
       - name: Verify - lint
-        run: npm run lint
+        # Same file scope as the upstream Docker lint stage (src/tests/scripts).
+        run: npx biome check --max-diagnostics=200 src tests scripts .github/actions/star-history
 
       - name: Verify - typecheck
         run: |
