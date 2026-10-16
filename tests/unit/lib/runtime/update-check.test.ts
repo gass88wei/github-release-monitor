@@ -110,7 +110,7 @@ describe("runtime/update-check", () => {
     const result = await runApplicationUpdateCheck("2.0.0");
 
     expect(fetchMock).toHaveBeenCalledWith(
-      "https://api.github.com/repos/iamspido/github-release-monitor/releases?per_page=100&page=1",
+      "https://api.github.com/repos/gass88wei/github-release-monitor/releases?per_page=100&page=1",
       expect.objectContaining({ cache: "no-store" }),
     );
     expect(result).toEqual({

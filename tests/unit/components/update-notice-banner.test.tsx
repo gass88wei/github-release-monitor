@@ -164,7 +164,7 @@ describe("UpdateNoticeBanner", () => {
 
     const link = container.querySelector("a");
     expect(link?.href).toBe(
-      "https://github.com/iamspido/github-release-monitor/releases/tag/v2.4.0%2Frc%201",
+      "https://github.com/gass88wei/github-release-monitor/releases/tag/v2.4.0%2Frc%201",
     );
     expect(link?.target).toBe("_blank");
     expect(link?.rel).toBe("noopener noreferrer");

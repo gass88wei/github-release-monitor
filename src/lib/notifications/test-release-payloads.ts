@@ -1,5 +1,6 @@
 import { getTranslations } from "next-intl/server";
 import type { Locale } from "@/i18n/config";
+import { APP_REPOSITORY_URL } from "@/lib/runtime/app-repo";
 
 // This constant holds the non-translatable part of the test data.
 const jsCodeExample = `function greet(name) {
@@ -116,7 +117,7 @@ export async function getBasicAppriseTestBody(
 
 > ${t("apprise_basic_blockquote")}
 
-${t("apprise_basic_link_text")} (https://github.com/iamspido/github-release-monitor)`;
+${t("apprise_basic_link_text")} (${APP_REPOSITORY_URL})`;
 
   return {
     title: t("apprise_basic_test_notification_title"),

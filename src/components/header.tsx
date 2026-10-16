@@ -18,6 +18,7 @@ import { useNetworkStatus } from "@/hooks/use-network";
 import type { Locale } from "@/i18n/config";
 import { Link, usePathname, useRouter } from "@/i18n/navigation";
 import type { AuthAccess } from "@/lib/auth/mode";
+import { APP_REPOSITORY_URL } from "@/lib/runtime/app-repo";
 import { reloadIfServerActionStale } from "@/lib/server-action-error";
 import { cn } from "@/lib/utils";
 import type { UpdateNotificationState } from "@/types";
@@ -90,7 +91,7 @@ export function Header({
             ))}
             <Button asChild variant="ghost" size="icon">
               <a
-                href="https://github.com/iamspido/github-release-monitor"
+                href={APP_REPOSITORY_URL}
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label={t("github_aria")}

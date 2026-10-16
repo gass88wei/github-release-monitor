@@ -1,0 +1,133 @@
+name: Release Windows Portable
+
+on:
+  push:
+    tags: [ 'v*.*.*' ]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+env:
+  NEXT_TELEMETRY_DISABLED: 1
+
+jobs:
+  build:
+    runs-on: windows-latest
+    timeout-minutes: 60
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci --no-audit --no-fund
+
+      - name: Verify - lint
+        run: npm run lint
+
+      - name: Verify - typecheck
+        run: |
+          npm run typecheck
+          npm run typecheck:tests
+
+      - name: Verify - unit tests
+        run: npm test -- --reporter=dot
+
+      - name: Build (standalone)
+        env:
+          BETTER_AUTH_SECRET: 9f3c7a1e5b8d2f604a9c1e7b3d5f8062c4a8e1b7d9f3056c2e4a8b1d7f9c3e50
+          BETTER_AUTH_URL: http://localhost:3000
+          HTTPS: 'false'
+        run: npm run build
+
+      - name: Determine version
+        id: version
+        shell: pwsh
+        run: |
+          if ('${{ github.ref_type }}' -eq 'tag') {
+            $v = '${{ github.ref_name }}'
+          } else {
+            $pkg = Get-Content package.json -Raw | ConvertFrom-Json
+            $v = "v$($pkg.version)-ci.${{ github.run_number }}"
+          }
+          "value=$v" >> $env:GITHUB_OUTPUT
+          Write-Host "Version: $v"
+
+      - name: Download Node.js runtime
+        shell: pwsh
+        run: |
+          $full = node -p "process.versions.node"
+          $url = "https://nodejs.org/dist/v$full/node-v$full-win-x64.zip"
+          Write-Host "Downloading $url"
+          Invoke-WebRequest -Uri $url -OutFile node-runtime.zip
+          Expand-Archive node-runtime.zip -DestinationPath node-runtime-extract
+          $inner = Get-ChildItem node-runtime-extract -Directory | Select-Object -First 1
+          New-Item -ItemType Directory -Path node-runtime | Out-Null
+          Get-ChildItem $inner.FullName | Move-Item -Destination node-runtime
+          node-runtime\node.exe -v
+
+      - name: Assemble portable package
+        shell: pwsh
+        run: node scripts/assemble-portable.mjs --node-dir node-runtime --out dist-portable
+
+      - name: Smoke test - start portable package
+        shell: pwsh
+        run: |
+          $env:GRM_NO_BROWSER = '1'
+          $pkg = Join-Path 'dist-portable' 'GitHubReleaseMonitor'
+          $proc = Start-Process -FilePath (Join-Path $pkg 'node\node.exe') `
+            -ArgumentList 'app\launcher.mjs' -WorkingDirectory $pkg `
+            -PassThru -NoNewWindow
+          $ok = $false
+          $status = 0
+          foreach ($i in 1..45) {
+            try {
+              $r = Invoke-WebRequest -Uri 'http://127.0.0.1:3000' -UseBasicParsing `
+                -TimeoutSec 3 -MaximumRedirection 5
+              $status = $r.StatusCode
+              if ($status -ge 200 -and $status -lt 400) { $ok = $true; break }
+            } catch {
+              Start-Sleep -Seconds 2
+            }
+          }
+          taskkill /F /T /PID $proc.Id 2>$null | Out-Null
+          if (-not $ok) {
+            Write-Host "::error::Smoke test failed - portable server did not answer on http://127.0.0.1:3000"
+            exit 1
+          }
+          Write-Host "Smoke test passed (HTTP $status)"
+
+      - name: Package zip
+        shell: pwsh
+        run: |
+          $v = '${{ steps.version.outputs.value }}'
+          $zip = "GitHubReleaseMonitor-Portable-$v-win-x64.zip"
+          Compress-Archive -Path 'dist-portable\GitHubReleaseMonitor' `
+            -DestinationPath $zip -Force
+          "zip=$zip" >> $env:GITHUB_OUTPUT
+          Get-Item $zip | Format-List Name, Length
+        id: zip
+
+      - name: Upload artifact (manual runs)
+        if: github.ref_type != 'tag'
+        uses: actions/upload-artifact@v7
+        with:
+          name: ${{ steps.zip.outputs.zip }}
+          path: ${{ steps.zip.outputs.zip }}
+          if-no-files-found: error
+
+      - name: Create GitHub Release
+        if: github.ref_type == 'tag'
+        uses: softprops/action-gh-release@v2
+        with:
+          files: ${{ steps.zip.outputs.zip }}
+          fail_on_unmatched_files: true
+          body: |
+            便携版（Windows x64）：解压后双击「启动监控.bat」即可使用，
+            免安装 Node.js，数据保存在本地 app\data 目录。

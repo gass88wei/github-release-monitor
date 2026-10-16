@@ -4,6 +4,7 @@ import {
   fetchWithTimeout,
 } from "@/lib/http/fetch-with-timeout";
 import { logger } from "@/lib/logger";
+import { APP_REPOSITORY } from "@/lib/runtime/app-repo";
 import {
   compareAppVersions,
   isStableAppVersion,
@@ -13,8 +14,7 @@ import { updateSystemStatus } from "@/lib/storage/system-status";
 import type { SystemStatus } from "@/types";
 
 const log = logger.withScope("UpdateCheck");
-const GITHUB_RELEASES_API =
-  "https://api.github.com/repos/iamspido/github-release-monitor/releases";
+const GITHUB_RELEASES_API = `https://api.github.com/repos/${APP_REPOSITORY}/releases`;
 const RELEASES_PER_PAGE = 100;
 const MAX_RELEASE_PAGES = 5;
 

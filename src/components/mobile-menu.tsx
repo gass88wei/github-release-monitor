@@ -20,6 +20,7 @@ import {
 import { useNetworkStatus } from "@/hooks/use-network";
 import { usePathname, useRouter } from "@/i18n/navigation";
 import type { AuthAccess } from "@/lib/auth/mode";
+import { APP_REPOSITORY_URL } from "@/lib/runtime/app-repo";
 import { cn } from "@/lib/utils";
 
 interface MobileMenuProps {
@@ -73,7 +74,7 @@ export function MobileMenu({
           ))}
           <DropdownMenuItem asChild>
             <a
-              href="https://github.com/iamspido/github-release-monitor"
+              href={APP_REPOSITORY_URL}
               target="_blank"
               rel="noopener noreferrer"
               className="flex w-full cursor-pointer items-center"

@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { useActionTransition } from "@/hooks/use-action-transition";
 import { useUpdateNoticeStream } from "@/hooks/use-update-notice-stream";
 import { isolateLtrText } from "@/lib/bidi";
+import { APP_RELEASES_URL, APP_REPOSITORY_URL } from "@/lib/runtime/app-repo";
 import type { UpdateNotificationState } from "@/types";
 
 type UpdateNoticeBannerProps = {
@@ -50,8 +51,8 @@ export function UpdateNoticeBanner({
   const trimmedVersion = currentNotice.latestVersion?.trim();
   const trimmedSecurityVersion = currentNotice.latestSecurityVersion?.trim();
   const releaseUrl = trimmedVersion
-    ? `https://github.com/iamspido/github-release-monitor/releases/tag/${encodeURIComponent(trimmedVersion)}`
-    : "https://github.com/iamspido/github-release-monitor/releases";
+    ? `${APP_REPOSITORY_URL}/releases/tag/${encodeURIComponent(trimmedVersion)}`
+    : APP_RELEASES_URL;
   const isSecurityUpdate = currentNotice.isSecurityUpdate;
   const releaseTitle = currentNotice.latestReleaseTitle?.trim();
 
