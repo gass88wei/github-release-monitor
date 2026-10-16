@@ -1,3 +1,5 @@
+import path from "node:path";
+
 describe("auth/email HTML rendering", () => {
   const env = { ...process.env };
 
@@ -216,7 +218,9 @@ describe("auth/email HTML rendering", () => {
       expect.stringContaining("Failed to open Better Auth SQLite database"),
       error,
     );
-    expect(logErrorMock.mock.calls[0]?.[0]).toContain("/data/auth.db");
+    expect(logErrorMock.mock.calls[0]?.[0]).toContain(
+      path.join("data", "auth.db"),
+    );
     expect(logErrorMock.mock.calls[0]?.[0]).toContain("UID/GID 1001");
   });
 });

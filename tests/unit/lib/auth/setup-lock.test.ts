@@ -1,3 +1,4 @@
+import path from "node:path";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const fsMock = vi.hoisted(() => ({
@@ -37,12 +38,14 @@ describe("auth/setup-lock", () => {
         .map(([filePath]) => String(filePath))
         .reverse()
         .find((filePath) =>
-          filePath.includes("auth-setup-bootstrap.gate/claim-"),
+          filePath.includes(
+            `auth-setup-bootstrap.gate${path.sep}claim-`,
+          ),
         );
       if (!claimPath) return [];
       return [
         {
-          name: claimPath.split("/").at(-1),
+          name: path.basename(claimPath),
           isDirectory: () => true,
         },
       ];
@@ -168,12 +171,14 @@ describe("auth/setup-lock", () => {
       const currentClaimPath = fsMock.mkdir.mock.calls
         .map(([filePath]) => String(filePath))
         .find((filePath) =>
-          filePath.includes("auth-setup-bootstrap.gate/claim-"),
+          filePath.includes(
+            `auth-setup-bootstrap.gate${path.sep}claim-`,
+          ),
         );
       return [
         { name: "claim-stale-owner", isDirectory: () => true },
         {
-          name: currentClaimPath?.split("/").at(-1),
+          name: currentClaimPath ? path.basename(currentClaimPath) : undefined,
           isDirectory: () => true,
         },
       ];
@@ -191,7 +196,9 @@ describe("auth/setup-lock", () => {
 
     expect(lock.status).toBe("acquired");
     expect(fsMock.rmdir).toHaveBeenCalledWith(
-      expect.stringContaining("auth-setup-bootstrap.gate/claim-stale-owner"),
+      expect.stringContaining(
+        path.join("auth-setup-bootstrap.gate", "claim-stale-owner"),
+      ),
     );
     expect(fsMock.rmdir).not.toHaveBeenCalledWith(
       expect.stringMatching(/auth-setup-bootstrap\.gate$/),
@@ -204,13 +211,15 @@ describe("auth/setup-lock", () => {
       const currentClaimPath = fsMock.mkdir.mock.calls
         .map(([filePath]) => String(filePath))
         .find((filePath) =>
-          filePath.includes("auth-setup-bootstrap.gate/claim-"),
+          filePath.includes(
+            `auth-setup-bootstrap.gate${path.sep}claim-`,
+          ),
         );
       return [
         { name: "claim-stale-owner", isDirectory: () => true },
         { name: newerClaimName, isDirectory: () => true },
         {
-          name: currentClaimPath?.split("/").at(-1),
+          name: currentClaimPath ? path.basename(currentClaimPath) : undefined,
           isDirectory: () => true,
         },
       ];
@@ -228,10 +237,14 @@ describe("auth/setup-lock", () => {
 
     expect(lock.status).toBe("busy");
     expect(fsMock.rmdir).toHaveBeenCalledWith(
-      expect.stringContaining("auth-setup-bootstrap.gate/claim-stale-owner"),
+      expect.stringContaining(
+        path.join("auth-setup-bootstrap.gate", "claim-stale-owner"),
+      ),
     );
     expect(fsMock.rmdir).not.toHaveBeenCalledWith(
-      expect.stringContaining(`auth-setup-bootstrap.gate/${newerClaimName}`),
+      expect.stringContaining(
+        path.join("auth-setup-bootstrap.gate", newerClaimName),
+      ),
     );
     expect(fsMock.writeFile).not.toHaveBeenCalled();
   });
