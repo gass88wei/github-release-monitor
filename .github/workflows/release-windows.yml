@@ -133,8 +133,23 @@ jobs:
         run: |
           $v = '${{ steps.version.outputs.value }}'
           $zip = "GitHubReleaseMonitor-Portable-$v-win-x64.zip"
+          # Smoke test creates a CI admin account + lock in app\data;
+          # ship a clean first-run state instead.
+          $data = 'dist-portable\GitHubReleaseMonitor\app\data'
+          if (Test-Path $data) { Remove-Item $data -Recurse -Force }
           Compress-Archive -Path 'dist-portable\GitHubReleaseMonitor' `
             -DestinationPath $zip -Force
+          Add-Type -AssemblyName System.IO.Compression.FileSystem
+          $z = [System.IO.Compression.ZipFile]::OpenRead((Resolve-Path $zip).Path)
+          try {
+            $leak = @($z.Entries | Where-Object {
+              $_.FullName -match 'GitHubReleaseMonitor[\\/]+app[\\/]+data[\\/]'
+            })
+          } finally { $z.Dispose() }
+          if ($leak.Count -gt 0) {
+            Write-Host "::error::Zip contains app\data state: $($leak.FullName -join ', ')"
+            exit 1
+          }
           "zip=$zip" >> $env:GITHUB_OUTPUT
           Get-Item $zip | Format-List Name, Length
         id: zip
