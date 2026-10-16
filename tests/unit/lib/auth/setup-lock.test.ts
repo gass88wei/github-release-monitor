@@ -38,9 +38,7 @@ describe("auth/setup-lock", () => {
         .map(([filePath]) => String(filePath))
         .reverse()
         .find((filePath) =>
-          filePath.includes(
-            `auth-setup-bootstrap.gate${path.sep}claim-`,
-          ),
+          filePath.includes(`auth-setup-bootstrap.gate${path.sep}claim-`),
         );
       if (!claimPath) return [];
       return [
@@ -171,9 +169,7 @@ describe("auth/setup-lock", () => {
       const currentClaimPath = fsMock.mkdir.mock.calls
         .map(([filePath]) => String(filePath))
         .find((filePath) =>
-          filePath.includes(
-            `auth-setup-bootstrap.gate${path.sep}claim-`,
-          ),
+          filePath.includes(`auth-setup-bootstrap.gate${path.sep}claim-`),
         );
       return [
         { name: "claim-stale-owner", isDirectory: () => true },
@@ -211,9 +207,7 @@ describe("auth/setup-lock", () => {
       const currentClaimPath = fsMock.mkdir.mock.calls
         .map(([filePath]) => String(filePath))
         .find((filePath) =>
-          filePath.includes(
-            `auth-setup-bootstrap.gate${path.sep}claim-`,
-          ),
+          filePath.includes(`auth-setup-bootstrap.gate${path.sep}claim-`),
         );
       return [
         { name: "claim-stale-owner", isDirectory: () => true },
