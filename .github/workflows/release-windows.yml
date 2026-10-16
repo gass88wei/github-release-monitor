@@ -97,8 +97,8 @@ jobs:
               Start-Sleep -Seconds 2
             }
           }
-          taskkill /F /T /PID $proc.Id 2>$null | Out-Null
           if (-not $ok) {
+            taskkill /F /T /PID $proc.Id 2>$null | Out-Null
             Write-Host "::error::Smoke test failed - portable server did not answer on http://127.0.0.1:3000"
             exit 1
           }
