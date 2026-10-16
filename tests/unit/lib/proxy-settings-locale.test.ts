@@ -672,31 +672,30 @@ describe("proxy", () => {
     expect(getSessionMock).not.toHaveBeenCalled();
   });
 
-  it.each([
-    "/de/login",
-    "/de/forgot-password",
-    "/de/reset-password",
-  ])("redirects auth page %s to home in External mode", async (pathname) => {
-    expect(proxyFn).toBeDefined();
-    const { NextResponse } = await import("next/server");
-    process.env.AUTHENTICATION_METHOD = "External";
+  it.each(["/de/login", "/de/forgot-password", "/de/reset-password"])(
+    "redirects auth page %s to home in External mode",
+    async (pathname) => {
+      expect(proxyFn).toBeDefined();
+      const { NextResponse } = await import("next/server");
+      process.env.AUTHENTICATION_METHOD = "External";
 
-    const baseResponse = new NextResponse(null, { status: 200 });
-    baseResponse.headers.set("x-next-intl-locale", "de");
-    handleI18nMock.mockReturnValue(baseResponse);
+      const baseResponse = new NextResponse(null, { status: 200 });
+      baseResponse.headers.set("x-next-intl-locale", "de");
+      handleI18nMock.mockReturnValue(baseResponse);
 
-    const request = createRequest(
-      `https://example.test${pathname}`,
-      { host: "example.test" },
-      { [SETTINGS_LOCALE_COOKIE]: "de" },
-    );
+      const request = createRequest(
+        `https://example.test${pathname}`,
+        { host: "example.test" },
+        { [SETTINGS_LOCALE_COOKIE]: "de" },
+      );
 
-    const response = await getProxy()(request);
+      const response = await getProxy()(request);
 
-    expect(response.status).toBe(307);
-    expect(response.headers.get("location")).toBe("https://example.test/de");
-    expect(getSessionMock).not.toHaveBeenCalled();
-  });
+      expect(response.status).toBe(307);
+      expect(response.headers.get("location")).toBe("https://example.test/de");
+      expect(getSessionMock).not.toHaveBeenCalled();
+    },
+  );
 
   it("blocks disallowed origins during development", async () => {
     expect(proxyFn).toBeDefined();
