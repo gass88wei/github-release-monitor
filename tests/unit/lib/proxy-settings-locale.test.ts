@@ -463,7 +463,7 @@ describe("proxy", () => {
     getSessionMock.mockResolvedValue(null);
 
     const request = createRequest(
-      "https://example.test/de/einstellungen",
+      "https://example.test/de/settings",
       { host: "example.test" },
       { [SETTINGS_LOCALE_COOKIE]: "de" },
     );
@@ -477,8 +477,8 @@ describe("proxy", () => {
     const redirectUrl = response.headers.get("location");
     expect(redirectUrl).toBeTruthy();
     const parsed = redirectUrl ? new URL(redirectUrl) : null;
-    expect(parsed?.pathname).toBe("/de/anmelden");
-    expect(parsed?.searchParams.get("next")).toBe("/de/einstellungen");
+    expect(parsed?.pathname).toBe("/de/login");
+    expect(parsed?.searchParams.get("next")).toBe("/de/settings");
     expect(response.cookies.get(SETTINGS_LOCALE_COOKIE)?.value).toBe("de");
     expect(response.cookies.get(NEXT_LOCALE_COOKIE)?.value).toBe("de");
     expect(response.headers.get("Content-Security-Policy")).toContain(
@@ -569,7 +569,7 @@ describe("proxy", () => {
     });
 
     const request = createRequest(
-      "https://example.test/de/anmelden",
+      "https://example.test/de/login",
       { host: "example.test" },
       { [SETTINGS_LOCALE_COOKIE]: "de" },
     );
@@ -592,7 +592,7 @@ describe("proxy", () => {
     getSessionMock.mockResolvedValue(null);
 
     const request = createRequest(
-      "https://example.test/de/registrieren",
+      "https://example.test/de/register",
       { host: "example.test" },
       { [SETTINGS_LOCALE_COOKIE]: "de" },
     );
@@ -636,7 +636,7 @@ describe("proxy", () => {
     getSessionMock.mockResolvedValue(null);
 
     const request = createRequest(
-      "https://example.test/de/einstellungen",
+      "https://example.test/de/settings",
       { host: "example.test" },
       { [SETTINGS_LOCALE_COOKIE]: "de" },
     );
@@ -646,8 +646,8 @@ describe("proxy", () => {
     expect(response.status).toBe(307);
     const redirectUrl = response.headers.get("location");
     const parsed = redirectUrl ? new URL(redirectUrl) : null;
-    expect(parsed?.pathname).toBe("/de/anmelden");
-    expect(parsed?.searchParams.get("next")).toBe("/de/einstellungen");
+    expect(parsed?.pathname).toBe("/de/login");
+    expect(parsed?.searchParams.get("next")).toBe("/de/settings");
   });
 
   it("allows restricted pages without internal session in External mode", async () => {
@@ -661,7 +661,7 @@ describe("proxy", () => {
     getSessionMock.mockResolvedValue(null);
 
     const request = createRequest(
-      "https://example.test/de/einstellungen",
+      "https://example.test/de/settings",
       { host: "example.test" },
       { [SETTINGS_LOCALE_COOKIE]: "de" },
     );
@@ -673,9 +673,9 @@ describe("proxy", () => {
   });
 
   it.each([
-    "/de/anmelden",
-    "/de/passwort-vergessen",
-    "/de/passwort-zuruecksetzen",
+    "/de/login",
+    "/de/forgot-password",
+    "/de/reset-password",
   ])("redirects auth page %s to home in External mode", async (pathname) => {
     expect(proxyFn).toBeDefined();
     const { NextResponse } = await import("next/server");
